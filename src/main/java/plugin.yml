@@ -1,0 +1,12 @@
+name: SpawnerTiers
+main: com.nbpe.spawnertiers.SpawnerTiers
+author: nbpe
+version: 1.1.0
+api: ["1.0.0"]
+description: SpawnerTiers for NukkitX
+commands:
+   spawner:
+      description: Give a player a tiered spawner.
+      usage: "/spawner (player) [tier] [type]"
+      permission: op
+      permission-message: You don't have <permission>
