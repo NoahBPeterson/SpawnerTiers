@@ -4,6 +4,10 @@ import java.util.Map;
 
 import cn.nukkit.Player;
 import cn.nukkit.Server;
+import cn.nukkit.block.Block;
+import cn.nukkit.block.BlockMobSpawner;
+import cn.nukkit.blockentity.BlockEntity;
+import cn.nukkit.blockentity.BlockEntitySpawnable;
 import cn.nukkit.command.Command;
 import cn.nukkit.command.CommandSender;
 import cn.nukkit.entity.mob.EntityBlaze;
@@ -40,21 +44,51 @@ import cn.nukkit.entity.passive.EntityTropicalFish;
 import cn.nukkit.entity.passive.EntityTurtle;
 import cn.nukkit.entity.passive.EntityWolf;
 import cn.nukkit.item.Item;
+import cn.nukkit.item.ItemBlock;
+import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.plugin.PluginBase;
 import cn.nukkit.plugin.PluginManager;
 import cn.nukkit.utils.Config;
 import cn.nukkit.utils.TextFormat;
+import nukkitcoders.mobplugin.entities.animal.flying.Bee;
+import nukkitcoders.mobplugin.entities.animal.walking.Cat;
+import nukkitcoders.mobplugin.entities.animal.walking.Fox;
+import nukkitcoders.mobplugin.entities.animal.walking.Llama;
+import nukkitcoders.mobplugin.entities.animal.walking.Mule;
+import nukkitcoders.mobplugin.entities.animal.walking.Panda;
+import nukkitcoders.mobplugin.entities.animal.walking.SkeletonHorse;
+import nukkitcoders.mobplugin.entities.animal.walking.ZombieHorse;
 import nukkitcoders.mobplugin.entities.block.BlockEntitySpawner;
+import nukkitcoders.mobplugin.entities.monster.flying.EnderDragon;
+import nukkitcoders.mobplugin.entities.monster.flying.Phantom;
+import nukkitcoders.mobplugin.entities.monster.flying.Vex;
+import nukkitcoders.mobplugin.entities.monster.flying.Wither;
+import nukkitcoders.mobplugin.entities.monster.swimming.ElderGuardian;
+import nukkitcoders.mobplugin.entities.monster.swimming.Guardian;
+import nukkitcoders.mobplugin.entities.monster.walking.CaveSpider;
+import nukkitcoders.mobplugin.entities.monster.walking.Drowned;
+import nukkitcoders.mobplugin.entities.monster.walking.Endermite;
+import nukkitcoders.mobplugin.entities.monster.walking.Evoker;
+import nukkitcoders.mobplugin.entities.monster.walking.IronGolem;
+import nukkitcoders.mobplugin.entities.monster.walking.Pillager;
+import nukkitcoders.mobplugin.entities.monster.walking.Ravager;
+import nukkitcoders.mobplugin.entities.monster.walking.Shulker;
+import nukkitcoders.mobplugin.entities.monster.walking.Silverfish;
+import nukkitcoders.mobplugin.entities.monster.walking.SnowGolem;
+import nukkitcoders.mobplugin.entities.monster.walking.Vindicator;
+import nukkitcoders.mobplugin.entities.monster.walking.ZombieVillager;
 
 public class SpawnerTiers extends PluginBase {
 	
 	Config itemsTierUp;
 	PluginManager pluginManager;
 	Map<String, BlockEntitySpawner> stringToSpawner;
+	MobSpawnerInteractListener pIEL;
 
     @Override
     public void onLoad() {
         this.getLogger().info(TextFormat.WHITE + "SpawnerTiers has been loaded!");
+        this.getServer().getCommandMap().register("Spawner", (Command)new SpawnerTiersCommand("spawner", this));
 
     }
 
@@ -64,14 +98,14 @@ public class SpawnerTiers extends PluginBase {
         
     	setupConfig();
     	
-    	MobSpawnerInteractListener pIEL = new MobSpawnerInteractListener(itemsTierUp);
+    	pIEL = new MobSpawnerInteractListener(itemsTierUp);
         this.getServer().getPluginManager().registerEvents(pIEL, this);
     }
     
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) 
     {
-    	switch(cmd.getName().toLowerCase()) // '/spawner (player) [tier] [type]'
+    	switch(cmd.getName().toLowerCase())
     	{
 	    	case "spawner":
 	    		if(args.length < 3) {
@@ -87,17 +121,9 @@ public class SpawnerTiers extends PluginBase {
 	    			return false;
 	    		}
 	    		Player playerToGiveTo = Server.getInstance().getPlayer(args[0]);
-	    		int tier = Integer.parseInt(args[1]);
-	    		int entityID = mobType(args[2]);
-	    		playerToGiveTo.getInventory().addItem(new Item(Item.SPAWN_EGG, entityID, 2));
-	    		playerToGiveTo.getInventory().addItem(new Item(Item.MONSTER_SPAWNER));
-	    		if(tier==2) {
-	    			playerToGiveTo.getInventory().addItem(new Item(itemsTierUp.getInt("ItemUpgradeTier2")));
-	    		}
-	    		if(tier==3) {
-	    			playerToGiveTo.getInventory().addItem(new Item(itemsTierUp.getInt("ItemUpgradeTier2")));
-	    			playerToGiveTo.getInventory().addItem(new Item(itemsTierUp.getInt("ItemUpgradeTier3")));
-	    		}
+	    		pIEL.addSpawner(playerToGiveTo, mobType(args[2]), Integer.parseInt(args[1]));
+	    		ItemBlock monsterSpawner = new ItemBlock(new BlockMobSpawner());
+	    		playerToGiveTo.getInventory().addItem(monsterSpawner);
 	    		return true;
 	    	default:
 	    		return false;
@@ -131,8 +157,14 @@ public class SpawnerTiers extends PluginBase {
     	switch(mobType.toLowerCase()) {
     	case "bat":
     		return EntityBat.NETWORK_ID;
+    	case "bee":
+    		return Bee.NETWORK_ID;
     	case "blaze":
     		return EntityBlaze.NETWORK_ID;
+    	case "cat":
+    		return Cat.NETWORK_ID;
+    	case "cavespider":
+    		return  CaveSpider.NETWORK_ID;
     	case "chicken":
     		return EntityChicken.NETWORK_ID;
     	case "cod":
@@ -145,38 +177,76 @@ public class SpawnerTiers extends PluginBase {
     		return EntityDolphin.NETWORK_ID;
     	case "donkey":
     		return EntityDonkey.NETWORK_ID;
+    	case "drowned":
+    		return Drowned.NETWORK_ID;
+    	case "elderguardian":
+    		return ElderGuardian.NETWORK_ID;
+    	case "enderdragon":
+    		return EnderDragon.NETWORK_ID;
     	case "enderman":
     		return EntityEnderman.NETWORK_ID;
+    	case "endermite":
+    		return Endermite.NETWORK_ID;
+    	case "evoker":
+    		return Evoker.NETWORK_ID;
+    	case "fox":
+    		return Fox.NETWORK_ID;
     	case "ghast":
     		return EntityGhast.NETWORK_ID;
+    	case "guardian":
+    		return Guardian.NETWORK_ID;
     	case "horse":
     		return EntityHorse.NETWORK_ID;
     	case "husk":
     		return EntityHusk.NETWORK_ID;
+    	case "irongolem":
+    	case "golem":
+    		return IronGolem.NETWORK_ID;
+    	case "llama":
+    		return Llama.NETWORK_ID;
     	case "magma":
+    	case "magmacube":
     		return EntityMagmaCube.NETWORK_ID;
     	case "mooshroom":
     		return EntityMooshroom.NETWORK_ID;
+    	case "mule":
+    		return Mule.NETWORK_ID;
     	case "ocelot":
     		return EntityOcelot.NETWORK_ID;
+    	case "panda":
+    		return Panda.NETWORK_ID;
     	case "parrot":
     		return EntityParrot.NETWORK_ID;
+    	case "phantom":
+    		return Phantom.NETWORK_ID;
     	case "pig":
     		return EntityPig.NETWORK_ID;
+    	case "pillager":
+    		return Pillager.NETWORK_ID;
     	case "polarbear":
     		return EntityPolarBear.NETWORK_ID;
     	case "pufferfish":
     		return EntityPufferfish.NETWORK_ID;
     	case "rabbit":
     		return EntityRabbit.NETWORK_ID;
+    	case "ravager":
+    		return Ravager.NETWORK_ID;
     	case "salmon":
     		return EntitySalmon.NETWORK_ID;
     	case "sheep":
     		return EntitySheep.NETWORK_ID;
+    	case "shulker":
+    		return Shulker.NETWORK_ID;
+    	case "silverfish":
+    		return Silverfish.NETWORK_ID;
     	case "skeleton":
     		return EntitySkeleton.NETWORK_ID;
+    	case "skeletonhorse":
+    		return SkeletonHorse.NETWORK_ID;
     	case "slime":
     		return EntitySlime.NETWORK_ID;
+    	case "snowgolem":
+    		return SnowGolem.NETWORK_ID;
     	case "spider":
     		return EntitySpider.NETWORK_ID;
     	case "squid":
@@ -187,14 +257,24 @@ public class SpawnerTiers extends PluginBase {
     		return EntityTropicalFish.NETWORK_ID;
     	case "turtle":
     		return EntityTurtle.NETWORK_ID;
+    	case "vex":
+    		return Vex.NETWORK_ID;
+    	case "vindicator":
+    		return Vindicator.NETWORK_ID;
     	case "witch":
     		return EntityWitch.NETWORK_ID;
+    	case "wither":
+    		return Wither.NETWORK_ID;
     	case "witherskeleton":
     		return EntityWitherSkeleton.NETWORK_ID;
     	case "wolf":
     		return EntityWolf.NETWORK_ID;
+    	case "zombiehorse":
+    		return ZombieHorse.NETWORK_ID;
     	case "zombiepigman":
     		return EntityZombiePigman.NETWORK_ID;
+    	case "zombievillager":
+    		return ZombieVillager.NETWORK_ID;
     	default:
     		return -1;
     	}

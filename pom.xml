@@ -4,7 +4,7 @@
 
   <groupId>com.nbpe</groupId>
   <artifactId>spawnertiers</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.2.0</version>
   <packaging>jar</packaging>
 
   <name>spawnertiers</name>
@@ -12,6 +12,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
   
     <repositories>
@@ -23,11 +25,19 @@
 
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
+    	<groupId>nukkitcoders.mobplugin</groupId>
+    	<artifactId>MobPlugin</artifactId>
+    	<version>1.11.1</version>
+    	<scope>system</scope>
+    	<systemPath>${project.basedir}/MobPlugin-1.10.9.2.jar</systemPath>
+	</dependency>
+	    <dependency>
+    	<groupId>nukkitcoders.economyAPI</groupId>
+    	<artifactId>EconomyAPI</artifactId>
+    	<version>1.11.1</version>
+    	<scope>system</scope>
+    	<systemPath>${project.basedir}/EconomyAPI.jar</systemPath>
+	</dependency>
     
      <dependency>
          <groupId>cn.nukkit</groupId>
@@ -36,4 +46,39 @@
          <scope>provided</scope>
      </dependency>
   </dependencies>
+    	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.5.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.0.2</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+		</plugins>
+		<resources>
+			<resource>
+				<directory>src/main/java</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>plugin.yml</include>
+				</includes>
+			</resource>
+		</resources>
+	</build>
 </project>
